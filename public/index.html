@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catch the Ball Multiplayer Game</title>
+  <style>
+    body { text-align: center; }
+    canvas { background: #f0f0f0; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <h1>Catch the Ball Multiplayer Game</h1>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
+  <p id="scoreDisplay">Score: 0</p>
+  <p id="playersDisplay">Waiting for players...</p>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
