@@ -1,43 +1,38 @@
+// server.js
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: '*', // Allow requests from any origin
-    methods: ['GET', 'POST']
-  }
-});
-
-// Serve static files from the docs folder
-app.use(express.static('docs'));
-
-let scores = {};
-
-io.on('connection', (socket) => {
-  console.log('A user connected: ' + socket.id);
-
-  // Listen for score updates from clients
-  socket.on('scoreUpdate', (score) => {
-    scores[socket.id] = score; // Store the score based on the socket id
-    io.emit('updateScore', score); // Broadcast updated score to all clients
-  });
-
-  // Listen for game over event
-  socket.on('gameOver', (score) => {
-    console.log(`Game Over! Player Score: ${score}`);
-    // Additional logic can be added here for game over
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected: ' + socket.id);
-    delete scores[socket.id]; // Remove the score when the user disconnects
-  });
-});
+const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
+
+// Serve static files from the 'docs' directory
+app.use(express.static('docs'));
+
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+    
+    // Handle player joining
+    socket.on('join', (playerName) => {
+        console.log(`${playerName} has joined the game`);
+        socket.broadcast.emit('playerJoined', playerName);
+    });
+
+    // Handle player score
+    socket.on('scoreUpdate', (score) => {
+        socket.broadcast.emit('scoreUpdate', score);
+    });
+
+    // Handle disconnect
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+// Start server
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
