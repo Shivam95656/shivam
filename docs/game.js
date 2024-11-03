@@ -1,10 +1,8 @@
-// game.js
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const socket = io();
-let playerName = prompt('Enter your name');
-socket.emit('newPlayer', playerName);
+// Connect to the deployed server instead of localhost
+const socket = io('https://YOUR_SERVER_URL'); // Replace with your actual server URL
 
 const basketWidth = 80;
 const basketHeight = 20;
@@ -66,10 +64,10 @@ function detectCollision() {
       ballX > basketX && ballX < basketX + basketWidth) {
     score++;
     resetBall();
-    socket.emit('scoreUpdate', score);
+    socket.emit('scoreUpdate', score); // Emit score to the server
   } else if (ballY + ballRadius > canvas.height) {
     gameOver = true;
-    socket.emit('gameOver');
+    socket.emit('gameOver', score); // Notify server about game over
   }
 }
 
@@ -106,17 +104,11 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
-// Update players display
-socket.on('updatePlayers', (players) => {
-  const playersDisplay = document.getElementById('playersDisplay');
-  playersDisplay.innerHTML = `Players: ${Object.values(players)
-    .map(player => `${player.name} (Score: ${player.score})`)
-    .join(', ')}`;
+// Listen for score updates from the server
+socket.on('updateScore', (newScore) => {
+  score = newScore;
 });
 
-// Show game results
-socket.on('gameResult', ({ players, winner }) => {
-  alert(`Game Over! Winner: ${winner}`);
-});
-
+// Start the game
 draw();
+
