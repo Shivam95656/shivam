@@ -1,4 +1,4 @@
-const socket = io('https://YOUR_SERVER_URL'); // Replace with your actual server URL
+const socket = io('https://shivam95656.github.io/shivam/'); // Replace with your actual server URL
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
