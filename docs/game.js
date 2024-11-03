@@ -1,8 +1,7 @@
+const socket = io('https://YOUR_SERVER_URL'); // Replace with your actual server URL
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
-// Connect to the deployed server instead of localhost
-const socket = io('https://YOUR_SERVER_URL'); // Replace with your actual server URL
 
 const basketWidth = 80;
 const basketHeight = 20;
@@ -18,97 +17,103 @@ let ballDY = 2;
 let score = 0;
 let gameOver = false;
 
+// Event listeners for keyboard controls
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
 
 function keyDownHandler(e) {
-  if (e.key === 'Right' || e.key === 'ArrowRight') {
-    rightPressed = true;
-  } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
-    leftPressed = true;
-  }
+    if(e.key === 'Right' || e.key === 'ArrowRight') {
+        rightPressed = true;
+    } else if(e.key === 'Left' || e.key === 'ArrowLeft') {
+        leftPressed = true;
+    }
 }
 
 function keyUpHandler(e) {
-  if (e.key === 'Right' || e.key === 'ArrowRight') {
-    rightPressed = false;
-  } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
-    leftPressed = false;
-  }
+    if(e.key === 'Right' || e.key === 'ArrowRight') {
+        rightPressed = false;
+    } else if(e.key === 'Left' || e.key === 'ArrowLeft') {
+        leftPressed = false;
+    }
 }
 
 function drawBasket() {
-  ctx.beginPath();
-  ctx.rect(basketX, canvas.height - basketHeight, basketWidth, basketHeight);
-  ctx.fillStyle = '#0095DD';
-  ctx.fill();
-  ctx.closePath();
+    ctx.beginPath();
+    ctx.rect(basketX, canvas.height - basketHeight, basketWidth, basketHeight);
+    ctx.fillStyle = '#0095DD';
+    ctx.fill();
+    ctx.closePath();
 }
 
 function drawBall() {
-  ctx.beginPath();
-  ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#0095DD';
-  ctx.fill();
-  ctx.closePath();
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#0095DD';
+    ctx.fill();
+    ctx.closePath();
 }
 
 function drawScore() {
-  ctx.font = '16px Arial';
-  ctx.fillStyle = '#0095DD';
-  ctx.fillText('Score: ' + score, 8, 20);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#0095DD';
+    ctx.fillText('Score: ' + score, 8, 20);
 }
 
 function detectCollision() {
-  if (ballY + ballRadius > canvas.height - basketHeight &&
-      ballX > basketX && ballX < basketX + basketWidth) {
-    score++;
-    resetBall();
-    socket.emit('scoreUpdate', score); // Emit score to the server
-  } else if (ballY + ballRadius > canvas.height) {
-    gameOver = true;
-    socket.emit('gameOver', score); // Notify server about game over
-  }
+    if(ballY + ballRadius > canvas.height - basketHeight &&
+       ballX > basketX && ballX < basketX + basketWidth) {
+        score++;
+        socket.emit('scoreUpdate', score); // Emit score update to the server
+        resetBall();
+    } else if(ballY + ballRadius > canvas.height) {
+        gameOver = true;
+        socket.emit('gameOver', score); // Emit game over to the server
+    }
 }
 
 function resetBall() {
-  ballX = Math.random() * (canvas.width - ballRadius * 2) + ballRadius;
-  ballY = ballRadius;
+    ballX = Math.random() * (canvas.width - ballRadius * 2) + ballRadius;
+    ballY = ballRadius;
 }
 
 function moveBasket() {
-  if (rightPressed && basketX < canvas.width - basketWidth) {
-    basketX += 7;
-  } else if (leftPressed && basketX > 0) {
-    basketX -= 7;
-  }
+    if(rightPressed && basketX < canvas.width - basketWidth) {
+        basketX += 7;
+    } else if(leftPressed && basketX > 0) {
+        basketX -= 7;
+    }
 }
 
 function draw() {
-  if (gameOver) {
-    ctx.font = '24px Arial';
-    ctx.fillStyle = '#0095DD';
-    ctx.fillText('Game Over! Score: ' + score, 50, canvas.height / 2);
-    return;
-  }
+    if(gameOver) {
+        ctx.font = '24px Arial';
+        ctx.fillStyle = '#0095DD';
+        ctx.fillText('Game Over! Score: ' + score, 50, canvas.height / 2);
+        return;
+    }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBasket();
-  drawBall();
-  drawScore();
-  detectCollision();
-  moveBasket();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBasket();
+    drawBall();
+    drawScore();
+    detectCollision();
+    moveBasket();
 
-  ballY += ballDY;
+    ballY += ballDY;
 
-  requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
 }
 
-// Listen for score updates from the server
 socket.on('updateScore', (newScore) => {
-  score = newScore;
+    score = newScore;
 });
 
-// Start the game
-draw();
+socket.on('connect', () => {
+    console.log('Successfully connected to the server with ID:', socket.id);
+});
 
+socket.on('disconnect', () => {
+    console.log('Disconnected from the server');
+});
+
+draw();
